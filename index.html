@@ -98,7 +98,7 @@
   <div class="wrap">
     <div>
       <h1>Lead Tracker</h1>
-      <div class="sub">Track your web-design prospects · saves automatically</div>
+      <div class="sub">Track your web-design prospects · <span id="sync">connecting…</span></div>
     </div>
     <button class="btn-export" id="export">⬇ Export CSV</button>
   </div>
@@ -122,7 +122,7 @@
 
   <div class="filters" id="filters"></div>
   <div id="list"></div>
-  <p class="footnote">Your leads are saved privately in this browser on this device. Use “Export CSV” to back them up or open in Excel/Sheets.</p>
+  <p class="footnote">Leads are shared — everyone who logs in sees and edits the same list, on any device. Use “Export CSV” to back them up or open in Excel/Sheets.</p>
 </div>
 
 <script>
@@ -146,10 +146,31 @@
     "Interested":['--s-int','--s-int-bg'],
     "Other":['--s-other','--s-other-bg']
   };
-  var leads=load(), filter='All', search='';
+  var API='https://api.restful-api.dev/objects/ff8081819d82fab6019f0a6ef0c46c92';
+  var leads=loadCache(), filter='All', search='', busy=false;
 
-  function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}}
-  function save(){localStorage.setItem(KEY,JSON.stringify(leads))}
+  function loadCache(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}}
+  function cacheSave(){localStorage.setItem(KEY,JSON.stringify(leads))}
+  function setSync(s){var el=document.getElementById('sync');if(!el)return;
+    if(s==='ok'){el.textContent='✓ Synced';el.style.color='#bff3df';}
+    else if(s==='saving'){el.textContent='Saving…';el.style.color='#ffe6a0';}
+    else{el.textContent='⚠ Offline — saved on device';el.style.color='#ffd0d0';}}
+  function pull(){
+    if(busy)return;
+    fetch(API).then(function(r){return r.json()}).then(function(d){
+      var remote=(d&&d.data&&d.data.leads)||[];
+      if(remote.length===0 && leads.length>0){push();return;}   // migrate local leads up the first time
+      var changed=JSON.stringify(remote)!==JSON.stringify(leads);
+      leads=remote; cacheSave(); setSync('ok');
+      if(changed) render();
+    }).catch(function(){setSync('off')});
+  }
+  function push(){
+    cacheSave(); setSync('saving'); busy=true;
+    fetch(API,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'sona-leads',data:{leads:leads}})})
+      .then(function(r){busy=false;setSync(r.ok?'ok':'off')})
+      .catch(function(){busy=false;setSync('off')});
+  }
   function cssv(v){return getComputedStyle(document.documentElement).getPropertyValue(v)}
 
   document.getElementById('addForm').addEventListener('submit',function(e){
@@ -157,11 +178,11 @@
     var name=document.getElementById('bizName').value.trim();
     if(!name)return;
     leads.unshift({id:Date.now(),name:name,phone:document.getElementById('bizPhone').value.trim(),status:document.getElementById('bizStatus').value});
-    save();this.reset();render();
+    push();this.reset();render();
   });
 
-  function setStatus(id,val){var l=leads.find(function(x){return x.id===id});if(l){l.status=val;save();render();}}
-  function del(id){if(confirm('Delete this lead?')){leads=leads.filter(function(x){return x.id!==id});save();render();}}
+  function setStatus(id,val){var l=leads.find(function(x){return x.id===id});if(l){l.status=val;push();render();}}
+  function del(id){if(confirm('Delete this lead?')){leads=leads.filter(function(x){return x.id!==id});push();render();}}
 
   function render(){
     // filters
@@ -209,6 +230,9 @@
   };
 
   render();
+  pull();                                              // load shared leads
+  setInterval(function(){ if(!document.hidden) pull(); }, 10000);  // keep in sync
+  window.addEventListener('focus', pull);
 </script>
 </body>
 </html>
