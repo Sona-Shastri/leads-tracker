@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead Tracker — Sona Shastri</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2312D0A1'/><text x='16' y='23' font-size='18' font-family='Arial' font-weight='bold' fill='%230F2238' text-anchor='middle'>L</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F2238; --mint:#12D0A1; --teal:#02A6A0; --ink:#1E2D3A; --grey:#6E7E89;
+    --line:#e6edf0; --bg:#f4f8f8; --white:#fff;
+    /* status colors */
+    --s-haven:#8a97a0; --s-haven-bg:#eef2f4;
+    --s-nopick:#d99a1c; --s-nopick-bg:#fdf3e0;
+    --s-left:#2f7dc4; --s-left-bg:#e7f1fb;
+    --s-int:#12a06f; --s-int-bg:#e2f6ee;
+    --s-other:#8257c4; --s-other-bg:#efe9fa;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px}
+
+  header{background:var(--navy);color:#fff;padding:22px 0}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  header h1{font-size:1.4rem;font-weight:800;display:flex;align-items:center;gap:10px}
+  header h1 .dot{width:30px;height:30px;border-radius:8px;background:var(--mint);color:var(--navy);display:grid;place-items:center;font-weight:800}
+  header .sub{color:#9db0bc;font-size:.85rem}
+  .btn-export{background:transparent;border:1.5px solid rgba(255,255,255,.4);color:#fff;padding:8px 16px;border-radius:8px;font-weight:600;font-size:.85rem;cursor:pointer}
+  .btn-export:hover{background:rgba(255,255,255,.1)}
+
+  /* add form */
+  .add{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:16px;margin:18px 0;box-shadow:0 8px 24px -18px rgba(15,34,56,.4)}
+  .add form{display:grid;grid-template-columns:1.4fr 1fr 1.2fr auto;gap:10px}
+  .add input,.add select{padding:12px 14px;border:1px solid var(--line);border-radius:9px;font-size:.95rem;font-family:inherit;background:#fbfdfd}
+  .add input:focus,.add select:focus{outline:2px solid var(--mint);border-color:var(--mint)}
+  .add button{background:var(--mint);color:var(--navy);border:none;border-radius:9px;padding:12px 22px;font-weight:700;font-size:.95rem;cursor:pointer;white-space:nowrap}
+  .add button:hover{background:#0fbf93}
+
+  /* stats / filters */
+  .filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:50px;padding:7px 14px;font-size:.85rem;font-weight:600;cursor:pointer;color:var(--grey);display:inline-flex;gap:7px;align-items:center}
+  .chip .n{background:var(--bg);border-radius:50px;padding:0 8px;font-size:.78rem}
+  .chip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .chip.active .n{background:rgba(255,255,255,.2)}
+  .search{flex:1;min-width:160px}
+  .search input{width:100%;padding:8px 14px;border:1px solid var(--line);border-radius:50px;font-family:inherit;font-size:.9rem}
+
+  /* leads */
+  .lead{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:grid;grid-template-columns:1.4fr 1fr 1.3fr auto;gap:12px;align-items:center}
+  .lead .name{font-weight:700;font-size:1rem;word-break:break-word}
+  .lead .name small{display:block;font-weight:400;color:var(--grey);font-size:.75rem}
+  .lead .phone a{color:var(--teal);font-weight:600;text-decoration:none;font-size:.95rem}
+  .lead .phone a:hover{text-decoration:underline}
+  .lead select.status{width:100%;padding:9px 12px;border-radius:8px;border:1.5px solid;font-weight:700;font-size:.85rem;font-family:inherit;cursor:pointer;-webkit-appearance:none;appearance:none;background-position:right 10px center;background-repeat:no-repeat;background-size:10px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23333' fill='none' stroke-width='1.6'/%3E%3C/svg%3E")}
+  .lead .del{background:none;border:none;color:#c44;cursor:pointer;font-size:1.2rem;padding:4px 8px;border-radius:6px}
+  .lead .del:hover{background:#fde8e8}
+
+  .empty{text-align:center;color:var(--grey);padding:50px 20px;background:#fff;border:1px dashed var(--line);border-radius:12px}
+  .footnote{text-align:center;color:var(--grey);font-size:.8rem;margin:26px 0 40px}
+
+  @media(max-width:720px){
+    .add form{grid-template-columns:1fr 1fr}
+    .add form button{grid-column:1/-1}
+    .lead{grid-template-columns:1fr auto;grid-template-areas:'name del' 'phone phone' 'status status';gap:8px}
+    .lead .name{grid-area:name}.lead .phone{grid-area:phone}.lead .status-wrap{grid-area:status}.lead .del{grid-area:del;justify-self:end}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div>
+      <h1><span class="dot">L</span> Lead Tracker</h1>
+      <div class="sub">Track your web-design prospects · saves automatically</div>
+    </div>
+    <button class="btn-export" id="export">⬇ Export CSV</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="add">
+    <form id="addForm">
+      <input id="bizName" placeholder="Business name" required>
+      <input id="bizPhone" placeholder="Phone number" inputmode="tel">
+      <select id="bizStatus">
+        <option value="Haven't called">Haven't called</option>
+        <option value="Called - no pickup">Called - no pickup</option>
+        <option value="Left name">Left name</option>
+        <option value="Interested">Interested</option>
+        <option value="Other">Other</option>
+      </select>
+      <button type="submit">+ Add Lead</button>
+    </form>
+  </div>
+
+  <div class="filters" id="filters"></div>
+  <div id="list"></div>
+  <p class="footnote">Your leads are saved privately in this browser on this device. Use “Export CSV” to back them up or open in Excel/Sheets.</p>
+</div>
+
+<script>
+  var KEY='sona_leads_v1';
+  var STATUSES=["Haven't called","Called - no pickup","Left name","Interested","Other"];
+  var STYLE={
+    "Haven't called":['--s-haven','--s-haven-bg'],
+    "Called - no pickup":['--s-nopick','--s-nopick-bg'],
+    "Left name":['--s-left','--s-left-bg'],
+    "Interested":['--s-int','--s-int-bg'],
+    "Other":['--s-other','--s-other-bg']
+  };
+  var leads=load(), filter='All', search='';
+
+  function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}}
+  function save(){localStorage.setItem(KEY,JSON.stringify(leads))}
+  function cssv(v){return getComputedStyle(document.documentElement).getPropertyValue(v)}
+
+  document.getElementById('addForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    var name=document.getElementById('bizName').value.trim();
+    if(!name)return;
+    leads.unshift({id:Date.now(),name:name,phone:document.getElementById('bizPhone').value.trim(),status:document.getElementById('bizStatus').value});
+    save();this.reset();render();
+  });
+
+  function setStatus(id,val){var l=leads.find(function(x){return x.id===id});if(l){l.status=val;save();render();}}
+  function del(id){if(confirm('Delete this lead?')){leads=leads.filter(function(x){return x.id!==id});save();render();}}
+
+  function render(){
+    // filters
+    var f=document.getElementById('filters');
+    var counts={All:leads.length};STATUSES.forEach(function(s){counts[s]=leads.filter(function(l){return l.status===s}).length});
+    var chips=['All'].concat(STATUSES).map(function(s){
+      return '<button class="chip '+(filter===s?'active':'')+'" data-f="'+s+'">'+s+' <span class="n">'+counts[s]+'</span></button>';
+    }).join('');
+    f.innerHTML=chips+'<span class="search"><input id="searchBox" placeholder="🔍 Search…" value="'+search.replace(/"/g,'&quot;')+'"></span>';
+    f.querySelectorAll('.chip').forEach(function(c){c.onclick=function(){filter=c.dataset.f;render();}});
+    var sb=document.getElementById('searchBox');sb.oninput=function(){search=sb.value;renderList();};sb.focus();sb.setSelectionRange(search.length,search.length);
+    renderList();
+  }
+
+  function renderList(){
+    var list=document.getElementById('list');
+    var items=leads.filter(function(l){
+      var okF=filter==='All'||l.status===filter;
+      var okS=!search||(l.name+' '+l.phone).toLowerCase().indexOf(search.toLowerCase())>-1;
+      return okF&&okS;
+    });
+    if(!items.length){list.innerHTML='<div class="empty">No leads yet. Add your first business above! 👆</div>';return;}
+    list.innerHTML=items.map(function(l){
+      var st=STYLE[l.status]||STYLE['Other'];
+      var color=cssv(st[0]),bg=cssv(st[1]);
+      var opts=STATUSES.map(function(s){return '<option '+(s===l.status?'selected':'')+'>'+s+'</option>'}).join('');
+      var tel=l.phone?'<a href="tel:'+l.phone.replace(/[^0-9+]/g,'')+'">'+esc(l.phone)+'</a>':'<span style="color:#aaa">—</span>';
+      return '<div class="lead">'+
+        '<div class="name">'+esc(l.name)+'</div>'+
+        '<div class="phone">'+tel+'</div>'+
+        '<div class="status-wrap"><select class="status" style="color:'+color+';background-color:'+bg+';border-color:'+color+'" data-id="'+l.id+'">'+opts+'</select></div>'+
+        '<button class="del" data-id="'+l.id+'" title="Delete">🗑</button>'+
+      '</div>';
+    }).join('');
+    list.querySelectorAll('.status').forEach(function(s){s.onchange=function(){setStatus(+s.dataset.id,s.value)}});
+    list.querySelectorAll('.del').forEach(function(b){b.onclick=function(){del(+b.dataset.id)}});
+  }
+
+  function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+  document.getElementById('export').onclick=function(){
+    var rows=[['Business','Phone','Status']].concat(leads.map(function(l){return[l.name,l.phone,l.status]}));
+    var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c||'').replace(/"/g,'""')+'"'}).join(',')}).join('\n');
+    var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='leads.csv';a.click();
+  };
+
+  render();
+</script>
+</body>
+</html>
