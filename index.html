@@ -98,7 +98,7 @@
   <div class="wrap">
     <div>
       <h1>Lead Tracker</h1>
-      <div class="sub">Track your web-design prospects · <span id="sync">connecting…</span></div>
+      <div class="sub">Track your web-design prospects · saves automatically</div>
     </div>
     <button class="btn-export" id="export">⬇ Export CSV</button>
   </div>
@@ -122,7 +122,7 @@
 
   <div class="filters" id="filters"></div>
   <div id="list"></div>
-  <p class="footnote">Leads are shared — everyone who logs in sees and edits the same list, on any device. Use “Export CSV” to back them up or open in Excel/Sheets.</p>
+  <p class="footnote">Your leads save on this device. Use “Export CSV” to back them up.</p>
 </div>
 
 <script>
@@ -146,31 +146,29 @@
     "Interested":['--s-int','--s-int-bg'],
     "Other":['--s-other','--s-other-bg']
   };
-  var API='https://api.restful-api.dev/objects/ff8081819d82fab6019f0a6ef0c46c92';
-  var leads=loadCache(), filter='All', search='', busy=false;
-
-  function loadCache(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}}
-  function cacheSave(){localStorage.setItem(KEY,JSON.stringify(leads))}
-  function setSync(s){var el=document.getElementById('sync');if(!el)return;
-    if(s==='ok'){el.textContent='✓ Synced';el.style.color='#bff3df';}
-    else if(s==='saving'){el.textContent='Saving…';el.style.color='#ffe6a0';}
-    else{el.textContent='⚠ Offline — saved on device';el.style.color='#ffd0d0';}}
-  function pull(){
-    if(busy)return;
-    fetch(API).then(function(r){return r.json()}).then(function(d){
-      var remote=(d&&d.data&&d.data.leads)||[];
-      if(remote.length===0 && leads.length>0){push();return;}   // migrate local leads up the first time
-      var changed=JSON.stringify(remote)!==JSON.stringify(leads);
-      leads=remote; cacheSave(); setSync('ok');
-      if(changed) render();
-    }).catch(function(){setSync('off')});
-  }
-  function push(){
-    cacheSave(); setSync('saving'); busy=true;
-    fetch(API,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'sona-leads',data:{leads:leads}})})
-      .then(function(r){busy=false;setSync(r.ok?'ok':'off')})
-      .catch(function(){busy=false;setSync('off')});
-  }
+  var SEED=[
+    {id:1,name:"Mobile car detailing rène",phone:"(630) 936-7901",status:"Called - no pickup"},
+    {id:2,name:"Wally's Lawn Care LLC",phone:"(815) 690-6550",status:"Called - no pickup"},
+    {id:3,name:"Game Day Team Wear",phone:"(630) 917-4653",status:"Haven't called"},
+    {id:4,name:"Country Kitchen",phone:"+18154983585",status:"Haven't called"},
+    {id:5,name:"Ilss Mobile Truck and Trailer Repair & Road service 24/7",phone:"(815) 779-4929",status:"Haven't called"},
+    {id:6,name:"AARNA BEST DENTAL",phone:"(331) 227-1234",status:"Haven't called"},
+    {id:7,name:"SewingNDecor",phone:"(331) 205-9509",status:"Haven't called"},
+    {id:8,name:"La Mon Excavating Inc",phone:"(630) 556-4664",status:"Haven't called"},
+    {id:9,name:"Murray Contracting",phone:"(630) 768-4127",status:"Haven't called"},
+    {id:10,name:"Artsy Girlz Art Studio & Custom Gifts",phone:"(630) 661-4345",status:"Haven't called"},
+    {id:11,name:"T Wisner Remodeling",phone:"(630) 466-7535",status:"Haven't called"},
+    {id:12,name:"Dogs R Angels- HBW",phone:"(630) 801-1037",status:"Haven't called"},
+    {id:13,name:"Scenic Landscape Inc- HBW",phone:"(630) 499-0499",status:"Haven't called"},
+    {id:14,name:"PCD HARDWOOD FLOORS CORP",phone:"(630) 888-9795",status:"Haven't called"},
+    {id:15,name:"WSI QCM Solutions",phone:"(630) 632-6422",status:"Haven't called"},
+    {id:16,name:"Price CPA Group",phone:"(630) 922-0233",status:"Haven't called"},
+    {id:17,name:"AK Lash Studio",phone:"(773) 563-1714",status:"Haven't called"}
+  ];
+  var leads=load(); var filter='All', search='';
+  if(leads.length===0){ leads=SEED.slice(); save(); }
+  function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}}
+  function save(){localStorage.setItem(KEY,JSON.stringify(leads))}
   function cssv(v){return getComputedStyle(document.documentElement).getPropertyValue(v)}
 
   document.getElementById('addForm').addEventListener('submit',function(e){
@@ -178,11 +176,11 @@
     var name=document.getElementById('bizName').value.trim();
     if(!name)return;
     leads.unshift({id:Date.now(),name:name,phone:document.getElementById('bizPhone').value.trim(),status:document.getElementById('bizStatus').value});
-    push();this.reset();render();
+    save();this.reset();render();
   });
 
-  function setStatus(id,val){var l=leads.find(function(x){return x.id===id});if(l){l.status=val;push();render();}}
-  function del(id){if(confirm('Delete this lead?')){leads=leads.filter(function(x){return x.id!==id});push();render();}}
+  function setStatus(id,val){var l=leads.find(function(x){return x.id===id});if(l){l.status=val;save();render();}}
+  function del(id){if(confirm('Delete this lead?')){leads=leads.filter(function(x){return x.id!==id});save();render();}}
 
   function render(){
     // filters
@@ -230,9 +228,6 @@
   };
 
   render();
-  pull();                                              // load shared leads
-  setInterval(function(){ if(!document.hidden) pull(); }, 10000);  // keep in sync
-  window.addEventListener('focus', pull);
 </script>
 </body>
 </html>
