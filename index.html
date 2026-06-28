@@ -166,7 +166,9 @@
     {id:17,name:"AK Lash Studio",phone:"(773) 563-1714",status:"Haven't called"}
   ];
   var leads=load(); var filter='All', search='';
-  if(leads.length===0){ leads=SEED.slice(); save(); }
+  // load the 17 starter leads on any device that's empty or still has leftover test data
+  if(leads.length<5 && localStorage.getItem('sona_seed_v')!=='2'){ leads=SEED.slice(); save(); }
+  localStorage.setItem('sona_seed_v','2');
   function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}}
   function save(){localStorage.setItem(KEY,JSON.stringify(leads))}
   function cssv(v){return getComputedStyle(document.documentElement).getPropertyValue(v)}
