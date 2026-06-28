@@ -15,6 +15,7 @@
     --s-nopick:#d99a1c; --s-nopick-bg:#fdf3e0;
     --s-left:#2f7dc4; --s-left-bg:#e7f1fb;
     --s-int:#12a06f; --s-int-bg:#e2f6ee;
+    --s-not:#d23b3b; --s-not-bg:#fdeaea;
     --s-other:#8257c4; --s-other-bg:#efe9fa;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -114,6 +115,7 @@
         <option value="Called - no pickup">Called - no pickup</option>
         <option value="Left name">Left name</option>
         <option value="Interested">Interested</option>
+        <option value="Not interested">Not interested</option>
         <option value="Other">Other</option>
       </select>
       <button type="submit">+ Add Lead</button>
@@ -138,12 +140,13 @@
   });
 
   var KEY='sona_leads_v1';
-  var STATUSES=["Haven't called","Called - no pickup","Left name","Interested","Other"];
+  var STATUSES=["Haven't called","Called - no pickup","Left name","Interested","Not interested","Other"];
   var STYLE={
     "Haven't called":['--s-haven','--s-haven-bg'],
     "Called - no pickup":['--s-nopick','--s-nopick-bg'],
     "Left name":['--s-left','--s-left-bg'],
     "Interested":['--s-int','--s-int-bg'],
+    "Not interested":['--s-not','--s-not-bg'],
     "Other":['--s-other','--s-other-bg']
   };
   var SEED=[
